@@ -1,0 +1,49 @@
+Code for voice clone:
+from IPython.lib.display import TextDisplayObject
+!pip3 install -U scipy
+!pip3 install tortoise
+!pip install transformers==4.19.0
+!pip3 install huggingface_hub
+!git clone https://github.com/neonbjb/tortoise-tts.git
+%cd tortoise-tts
+!pip3 install -r requirements.txt
+!python setup.py install
+
+import torch
+import torchaudio
+import torch.nn as nn
+import torch.nn.functional as F
+import IPython
+from tortoise.api import TextToSpeech
+from tortoise.utils.audio import load_audio, load_voice, load_voices
+tts = TextToSpeech()
+
+text = Hey there. nice to meet you!
+preset = "fast"
+
+voice = "train_dotrice"
+voice_samples,conditioning_latents = load_voice(voice)
+gen = tts.tts_with_preset(text,voice_samples=voice_samples,conditioning_latents=conditioning_latents,preset=preset)
+torchaudio.save('generated.wav',gen.squeeze(0).cpu(),24000)
+IPython.display.Audio("/content/audio_5.wav")
+
+CUSTOM_VOICE_NAME = 'shraddha'
+import os
+from google.colab import files
+
+custom_voice_folder = f"tortoise/voices/{CUSTOM_VOICE_NAME}"
+if not os.path.exists(custom_voice_folder):
+    os.makedirs(custom_voice_folder)
+
+for i, file_data in enumerate(files.upload().values()):
+    with open(os.path.join(custom_voice_folder, f'{i}.wav'), 'wb') as f:
+        f.write(file_data)
+
+text = "Hey there, nice to meet you!"
+preset = "fast"
+
+
+voice_samples, conditioning_latents = load_voice(CUSTOM_VOICE_NAME)
+gen = tts.tts_with_preset(text, voice_samples=voice_samples, conditioning_latents=conditioning_latents, preset=preset)
+torchaudio.save(f'generated-{CUSTOM_VOICE_NAME}.wav', gen.squeeze(0).cpu(), 24000)
+IPython.display.Audio(f'generated-{CUSTOM_VOICE_NAME}.wav')
